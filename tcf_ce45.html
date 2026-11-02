@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCF-CE Série 45 – Compréhension écrite</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f5f4f0;color:#1a1a1a;padding:1rem}
+#app{max-width:860px;margin:0 auto}
+.header{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem}
+.header img{height:48px;object-fit:contain}
+.header-right{text-align:right}
+.header-title{font-size:16px;font-weight:700;color:#1a1a1a}
+.header-sub{font-size:12px;color:#888;margin-top:2px}
+.prog-bar{height:5px;background:#e0ddd5;border-radius:3px;margin-bottom:4px}
+.prog-fill{height:100%;background:#1D9E75;border-radius:3px;transition:width .35s}
+.prog-labels{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:1rem}
+.nav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:.85rem}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid #d0cdc5;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:#444}
+.btn:hover{background:#f5f4f0}
+.btn-results{margin-left:auto;border-color:#0F6E56;color:#0F6E56;font-weight:600;background:#fff}
+.btn-results:hover{background:#e8f7f2}
+.card{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.textbox{background:#f8f7f3;border-left:3px solid #1D9E75;border-radius:0 8px 8px 0;padding:1rem 1.25rem;margin-bottom:1.1rem;font-size:15px;line-height:1.85;color:#1a1a1a;width:100%;box-sizing:border-box}
+.textbox mark{background:#FAC775;color:#412402;border-radius:3px;padding:1px 3px;font-style:normal}
+.question{font-size:16px;font-weight:600;margin-bottom:.9rem}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice{padding:11px 15px;border:1px solid #d0cdc5;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px;background:#fff;width:100%;box-sizing:border-box;text-align:left;transition:background .15s,border-color .15s}
+.choice:hover:not(.correct):not(.wrong){background:#f5f4f0}
+.choice .badge{font-weight:600;min-width:22px;flex-shrink:0}
+.choice.correct{border-color:#0F6E56;background:#E1F5EE;color:#085041}
+.choice.wrong{border-color:#993C1D;background:#FAECE7;color:#4A1B0C}
+.feedback{border-radius:8px;padding:10px 14px;margin-top:.85rem;font-size:14px}
+.feedback.ok{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+.feedback.ko{background:#FAECE7;color:#4A1B0C;border:1px solid #F0997B}
+.key-label{display:inline-block;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;border-radius:6px;padding:3px 10px;font-size:12px;margin-bottom:.75rem}
+/* Summary */
+.summary{background:#fff;border:1px solid #e0ddd5;border-radius:12px;padding:1.5rem}
+.summary h2{font-size:20px;font-weight:700;margin-bottom:1.25rem;text-align:center}
+.score-block{text-align:center;margin-bottom:1.5rem}
+.score-correct{font-size:32px;font-weight:700;color:#1D9E75}
+.score-tcf{font-size:22px;font-weight:600;margin-top:.5rem;color:#1a1a1a}
+.score-nclc{font-size:28px;font-weight:700;color:#BA7517;margin-top:.4rem}
+.score-msg{font-size:14px;color:#555;margin-top:.5rem}
+.grid{display:flex;flex-wrap:wrap;gap:6px;margin:1.25rem 0}
+.grid-btn{width:36px;height:36px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;color:#fff}
+.grid-btn.ok{background:#1D9E75}
+.grid-btn.ko{background:#993C1D}
+.grid-btn.na{background:#bbb;color:#fff}
+.sum-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem}
+.sum-btn{padding:9px 18px;border-radius:8px;border:1px solid #0F6E56;color:#0F6E56;font-weight:600;background:#fff;cursor:pointer;font-size:14px}
+.sum-btn:hover{background:#e8f7f2}
+.sum-btn.red{border-color:#993C1D;color:#993C1D}
+.sum-btn.red:hover{background:#FAECE7}
+.sum-note{font-size:11px;color:#888;margin-top:.75rem}
+/* Report */
+.report-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.report-item{border:1px solid #e0ddd5;border-radius:10px;padding:1rem;margin-bottom:1rem;background:#fff}
+.report-item .qnum{font-size:11px;color:#888;margin-bottom:.5rem}
+.report-choice{padding:8px 12px;border-radius:6px;font-size:13px;margin-top:5px;display:flex;gap:8px;align-items:center}
+.report-choice.correct{background:#E1F5EE;color:#085041;border:1px solid #5DCAA5}
+.report-choice.wrong{background:#FAECE7;color:#4A1B0C;border:1px solid #F0997B}
+.report-choice.neutral{background:#f5f4f0;color:#555;border:1px solid #e0ddd5}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <img src="data:image/jpeg;base64,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" alt="MLI logo">
+    <div class="header-right">
+      <div class="header-title">Compréhension écrite – Test 45</div>
+      <div class="header-sub" id="hdr-sub">39 questions · 0 pt</div>
+    </div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <div class="prog-labels"><span id="pleft">Question 1 / 39</span><span id="pright">0% complété</span></div>
+  <div id="view"></div>
+</div>
+
+<script type="application/json" id="qdata">
+[
+  {
+    "t": "Sofia, rejoins-nous samedi matin au jardin partagé des Lilas. Nous planterons les tomates, puis nous déjeunerons sous la pergola.\nÀ bientôt !\nLucia",
+    "q": "Où Sofia est-elle invitée ?",
+    "c": [
+      "Dans une ferme.",
+      "Au marché.",
+      "Dans un jardin collectif.",
+      "Chez Lucia."
+    ],
+    "a": 2,
+    "k": "au jardin partagé des Lilas"
+  },
+  {
+    "t": "Message de la pharmacie Centrale\nMonsieur Moreau, votre commande est arrivée. Merci de venir la chercher avant vendredi à 18 h.",
+    "q": "Que doit faire monsieur Moreau avant vendredi ?",
+    "c": [
+      "Retirer sa commande.",
+      "Appeler son médecin traitant.",
+      "Payer une facture en ligne.",
+      "Changer de pharmacie."
+    ],
+    "a": 0,
+    "k": "votre commande est arrivée. Merci de venir la chercher avant vendredi à 18 h."
+  },
+  {
+    "t": "Votre colis est arrivé au point Relais Soleil, 14 rue des Fleurs.\nPrésentez le code 5841 et une pièce d'identité avant samedi à 18 h.\nAprès cette date, le paquet sera renvoyé à l'expéditeur.",
+    "q": "Pourquoi ce message a-t-il été envoyé ?",
+    "c": [
+      "Pour annoncer une nouvelle commande.",
+      "Pour demander une adresse complète.",
+      "Pour signaler un retard de livraison.",
+      "Pour informer qu'un colis peut être retiré."
+    ],
+    "a": 3,
+    "k": "Votre colis est arrivé au point Relais Soleil"
+  },
+  {
+    "t": "Cette année, les élèves de l'école des Tilleuls photographient chaque semaine le même arbre de la cour. En classe, ils comparent les images, notent la couleur des feuilles et observent l'arrivée des fleurs. Leur album sera présenté aux familles en juin.",
+    "q": "Qu'apprennent les élèves grâce à ce projet ?",
+    "c": [
+      "Les changements de la nature au fil des saisons.",
+      "Les techniques professionnelles de la photographie.",
+      "L'histoire des arbres de leur quartier.",
+      "La manière d'organiser une exposition."
+    ],
+    "a": 0,
+    "k": "notent la couleur des feuilles et observent l'arrivée des fleurs"
+  },
+  {
+    "t": "Cinéma Le Palace\nVotre carte annuelle expire le 30 juin. Renouvelez-la avant cette date pour conserver vos avantages.",
+    "q": "Quel établissement a envoyé ce message ?",
+    "c": [
+      "Une bibliothèque.",
+      "Un cinéma.",
+      "Une agence de voyages.",
+      "Une salle de sport."
+    ],
+    "a": 1,
+    "k": "Cinéma Le Palace"
+  },
+  {
+    "t": "Le festival Saveurs du monde réunit dimanche vingt restaurateurs sur la place des Halles. Des portions à petit prix permettront de découvrir leurs spécialités. Pour éviter l'attente, achetez dès maintenant vos tickets sur le site de l'événement.",
+    "q": "Que conseille cette annonce aux visiteurs ?",
+    "c": [
+      "D'apporter leur repas.",
+      "D'acheter leurs tickets en ligne.",
+      "De réserver une table au restaurant.",
+      "De participer à un concours de cuisine."
+    ],
+    "a": 1,
+    "k": "Pour éviter l'attente, achetez dès maintenant vos tickets sur le site de l'événement."
+  },
+  {
+    "t": "Association Lire Ensemble recherche une personne disponible deux heures le mercredi.\nSa mission : aider des enfants de 8 à 10 ans à choisir un livre, puis écouter chacun raconter sa lecture. Patience et goût des histoires indispensables. Formation assurée par l'association.",
+    "q": "Quel profil recherche l'association ?",
+    "c": [
+      "À un libraire expérimenté.",
+      "À un bénévole qui aime lire.",
+      "À un parent cherchant une garderie.",
+      "À un enfant qui veut emprunter des livres."
+    ],
+    "a": 1,
+    "k": "Patience et goût des histoires indispensables."
+  },
+  {
+    "t": "Je ne voulais pas acheter une tente pour un seul week-end. Sur Camp-Partage, j'ai réservé tout l'équipement nécessaire auprès d'une famille de mon quartier. J'ai vérifié le matériel avec elle au départ, puis je l'ai rendu propre le lundi. Cette location m'a coûté beaucoup moins cher qu'un achat.",
+    "q": "Quelle expérience cette personne raconte-t-elle ?",
+    "c": [
+      "La location de matériel de camping entre particuliers.",
+      "L'achat d'une tente dans un commerce local.",
+      "Un week-end organisé par une association.",
+      "La réparation d'un équipement abîmé."
+    ],
+    "a": 0,
+    "k": "Sur Camp-Partage, j'ai réservé tout l'équipement nécessaire auprès d'une famille de mon quartier."
+  },
+  {
+    "t": "HUILE USAGÉE\nNe versez plus votre huile de cuisson dans l'évier. Placez-la dans une bouteille fermée et déposez-la dans l'un de nos conteneurs. Elle sera transformée en combustible. Consultez la carte des points de collecte sur le site municipal.",
+    "q": "À quoi sert le dispositif présenté ?",
+    "c": [
+      "À distribuer de l'huile alimentaire.",
+      "À récupérer l'huile de cuisson usagée.",
+      "À nettoyer les canalisations.",
+      "À vendre du combustible aux habitants."
+    ],
+    "a": 1,
+    "k": "Placez-la dans une bouteille fermée et déposez-la dans l'un de nos conteneurs."
+  },
+  {
+    "t": "À partir de janvier, la région remettra un billet Culture aux jeunes qui fêtent leurs dix-huit ans. Valable pendant six mois, il donnera accès à trois spectacles au choix parmi les cinémas, théâtres et salles de concert partenaires.",
+    "q": "Que permettra le billet Culture ?",
+    "c": [
+      "De suivre des cours artistiques.",
+      "D'assister à plusieurs spectacles.",
+      "De voyager gratuitement dans la région.",
+      "De rencontrer des artistes professionnels."
+    ],
+    "a": 1,
+    "k": "il donnera accès à trois spectacles au choix"
+  },
+  {
+    "t": "Daniel, monsieur Perrot attend la version signée du contrat demain matin. Vérifie la date sur la dernière page, puis envoie-lui le document par courriel avant 10 h.\nMerci.\nClaire",
+    "q": "Que doit faire Daniel demain matin ?",
+    "c": [
+      "Rencontrer monsieur Perrot.",
+      "Envoyer un contrat vérifié.",
+      "Modifier la date d'une réunion.",
+      "Imprimer plusieurs documents."
+    ],
+    "a": 1,
+    "k": "Vérifie la date sur la dernière page, puis envoie-lui le document par courriel avant 10 h."
+  },
+  {
+    "t": "Les nouvelles voitures électriques de location fonctionnent bien en ville, mais leur autonomie diminue fortement sur autoroute par temps froid. Le chauffage consomme une partie de l'énergie et les bornes sont rares sur certains trajets. Des clients ont dû modifier leur itinéraire ou attendre longtemps avant de repartir. Le loueur conseille désormais de réserver un modèle doté d'une batterie plus grande pour les déplacements hivernaux.",
+    "q": "Quelle difficulté rencontrent les utilisateurs de ces voitures ?",
+    "c": [
+      "Elles sont interdites sur les autoroutes.",
+      "Leur autonomie devient insuffisante dans certaines conditions.",
+      "Elles ne peuvent pas être louées en hiver.",
+      "Le chauffage ne fonctionne jamais."
+    ],
+    "a": 1,
+    "k": "leur autonomie diminue fortement sur autoroute par temps froid"
+  },
+  {
+    "t": "L'association Passerelle accompagne les parents récemment installés dans la ville. Elle organise des rencontres dans les écoles, explique les services disponibles et met en relation les familles qui habitent le même quartier. Des bénévoles peuvent aussi accompagner une personne à son premier rendez-vous administratif. L'objectif n'est pas de faire les démarches à sa place, mais de lui permettre de créer des contacts et de devenir rapidement autonome.",
+    "q": "Quel est l'objectif de l'association Passerelle ?",
+    "c": [
+      "Garder les enfants après l'école.",
+      "Aider de nouvelles familles à construire un réseau local.",
+      "Trouver un logement à chaque parent.",
+      "Remplacer les services administratifs."
+    ],
+    "a": 1,
+    "k": "met en relation les familles qui habitent le même quartier"
+  },
+  {
+    "t": "La piscine municipale propose des cours pour adultes qui savent déjà flotter mais souhaitent améliorer leur technique. Les groupes sont limités à huit personnes et répartis après une courte évaluation. On peut s'inscrire pour dix Séances le soir ou le samedi matin. Le matériel est fourni, mais l'entrée à la piscine reste à la charge du participant.",
+    "q": "Quelle particularité ont ces cours de natation ?",
+    "c": [
+      "Ils sont destinés aux nageurs professionnels.",
+      "Ils s'adaptent au niveau des participants.",
+      "Ils comprennent toujours l'entrée à la piscine.",
+      "Ils ont lieu uniquement le samedi."
+    ],
+    "a": 1,
+    "k": "répartis après une courte évaluation"
+  },
+  {
+    "t": "Vous rêvez d'une escapade sans voiture ? À la gare de Valmont, nous vous remettons un vélo équipé de sacoches et un carnet d'itinéraires. Votre bagage principal est transporté jusqu'à l'hôtel suivant. Vous pédalez à votre rythme et profitez pleinement des villages traversés.",
+    "q": "Quel séjour est présenté dans cette publicité ?",
+    "c": [
+      "Un séjour itinérant à vélo.",
+      "Une compétition entre villages.",
+      "Un service de réparation automobile.",
+      "Une randonnée avec un groupe sportif."
+    ],
+    "a": 0,
+    "k": "nous vous remettons un vélo équipé de sacoches et un carnet d'itinéraires"
+  },
+  {
+    "t": "Changer de métier ne s'improvise pas. Un nouveau guide invite d'abord le lecteur à identifier les compétences acquises dans ses expériences, y compris bénévoles. Il propose ensuite des exercices pour confronter ses envies aux réalités d'un secteur : horaires, revenus, formations nécessaires. Enfin, des témoignages montrent comment tester un projet à petite échelle avant de quitter son emploi. L'objectif n'est pas de fournir une liste de professions à la mode, mais d'aider chacun à construire une décision réaliste.",
+    "q": "Que peut-on trouver dans ce guide ?",
+    "c": [
+      "Un classement des métiers les mieux payés.",
+      "Des offres d'emploi immédiatement disponibles.",
+      "Une méthode pour préparer une reconversion.",
+      "Des cours complets pour obtenir un diplôme."
+    ],
+    "a": 2,
+    "k": "des témoignages montrent comment tester un projet à petite échelle avant de quitter son emploi"
+  },
+  {
+    "t": "Les cyclistes connaissent le problème : indiquer un changement de direction oblige à lâcher le guidon d'une main, parfois dans l'obscurité. Ce sac à dos comporte des flèches lumineuses visibles de loin. Une petite commande fixée au guidon permet d'allumer la flèche gauche ou droite sans modifier sa trajectoire. Rechargeable par câble USB, le dispositif résiste à la pluie. Il ne remplace pas la prudence, mais rend les intentions du cycliste beaucoup plus claires pour les automobilistes.",
+    "q": "Quelle est la particularité de ce sac à dos ?",
+    "c": [
+      "Il recharge le téléphone du cycliste.",
+      "Il signale la direction que le cycliste va prendre.",
+      "Il protège entièrement son contenu de la pluie.",
+      "Il corrige automatiquement la trajectoire du vélo."
+    ],
+    "a": 1,
+    "k": "permet d'allumer la flèche gauche ou droite sans modifier sa trajectoire"
+  },
+  {
+    "t": "Laura voulait découvrir la vie agricole sans quitter la France. Elle a passé une semaine dans une ferme familiale du Jura. Le matin, elle aidait à nourrir les chèvres et observait la fabrication du fromage. L'après-midi, elle parcourait les sentiers ou visitait les villages voisins. Elle dormait dans une petite chambre aménagée au-dessus de l'étable et partageait les repas avec les propriétaires. Ce séjour simple lui a permis de comprendre leur travail quotidien.",
+    "q": "Dans quel lieu Laura a-t-elle séjourné ?",
+    "c": [
+      "Dans un hôtel au bord de la mer.",
+      "Dans un refuge de haute montagne.",
+      "Dans un appartement en ville.",
+      "Dans une ferme familiale."
+    ],
+    "a": 3,
+    "k": "Elle a passé une semaine dans une ferme familiale du Jura."
+  },
+  {
+    "t": "Longtemps associé aux repas très simples, le pois chiche séduit aujourd'hui les chefs. Sa texture permet de préparer aussi bien des purées que des desserts, tandis que son eau de cuisson peut remplacer les blancs d'œufs dans certaines recettes. Pour qu'il soit tendre, il faut toutefois le faire tremper plusieurs heures avant une cuisson lente. Les ventes progressent, portées par l'intérêt pour les protéines végétales et par la créativité des restaurateurs, qui l'intègrent désormais à des plats raffinés.",
+    "q": "Que révèle cet article sur le pois chiche ?",
+    "c": [
+      "Son origine géographique exacte.",
+      "La diversité de ses usages en cuisine.",
+      "L'explication de son coût important.",
+      "Les risques liés à sa consommation."
+    ],
+    "a": 1,
+    "k": "Sa texture permet de préparer aussi bien des purées que des desserts"
+  },
+  {
+    "t": "L'hôtel Chemins légers propose aux voyageurs un itinéraire de cinq jours entre plusieurs villages reliés par le train. Chaque matin, les clients déposent leur valise à la réception ; elle est transportée jusqu'à l'hébergement suivant. Ils voyagent avec un petit sac, descendent dans la gare de leur choix et suivent les promenades suggérées dans un carnet. Les billets de train, les nuits et le transport des bagages sont compris. Cette formule permet de changer de lieu sans louer de voiture ni porter toutes ses affaires.",
+    "q": "Quel service original cet hôtel propose-t-il ?",
+    "c": [
+      "Des excursions quotidiennes en autocar.",
+      "Un voyage itinérant avec transfert des bagages.",
+      "La location gratuite d'une voiture.",
+      "Un séjour fixe avec des repas inclus."
+    ],
+    "a": 1,
+    "k": "Chaque matin, les clients déposent leur valise à la réception ; elle est transportée jusqu'à l'hébergement suivant."
+  },
+  {
+    "t": "Avant d'acheter un objet à un particulier en ligne, examinez l'ancienneté du compte, les évaluations et les photographies. Méfiez-vous d'un prix très inférieur au marché et d'un vendeur qui refuse la messagerie de la plateforme. Utilisez le paiement sécurisé proposé par le site et ne transmettez jamais le code reçu par téléphone. Pour un objet coûteux, demandez une preuve d'achat et privilégiez une remise dans un lieu public. Ces précautions ne suppriment pas tout risque, mais elles rendent les fraudes plus difficiles et facilitent un éventuel recours.",
+    "q": "Quel est le but de ces recommandations ?",
+    "c": [
+      "Accélérer la livraison des objets.",
+      "Aider les vendeurs à fixer leur prix.",
+      "Comparer plusieurs plateformes commerciales.",
+      "Limiter les risques d'escroquerie en ligne."
+    ],
+    "a": 3,
+    "k": "Ces précautions ne suppriment pas tout risque, mais elles rendent les fraudes plus difficiles"
+  },
+  {
+    "t": "Des chercheurs veulent établir une carte des oiseaux présents dans les parcs urbains. Les volontaires reçoivent chaque semaine de courts enregistrements réalisés automatiquement à l'aube. Ils doivent écouter, identifier les chants qu'ils reconnaissent et signaler les extraits incertains. Plusieurs réponses sont comparées avant qu'un ornithologue valide l'espèce. Les participants ne se rendent donc pas sur le terrain et ne remplacent pas les spécialistes. Leur travail permet de trier rapidement des milliers d'heures de son et de sélectionner les passages qui nécessitent une analyse plus précise.",
+    "q": "Quel rôle les participants jouent-ils dans cette recherche ?",
+    "c": [
+      "Ils installent les appareils dans tous les parcs.",
+      "Ils apprennent aux oiseaux de nouveaux chants.",
+      "Ils rédigent seuls les conclusions scientifiques.",
+      "Ils contribuent à identifier les sons enregistrés."
+    ],
+    "a": 3,
+    "k": "Ils doivent écouter, identifier les chants qu'ils reconnaissent et signaler les extraits incertains."
+  },
+  {
+    "t": "La chanteuse Mell a demandé au public de garder le silence complet pendant une chanson interprétée sans micro. Les premières secondes ont surpris : quelques personnes ont ri et d'autres ont continué à parler. Puis la salle s'est progressivement tue. À la fin, personne n'a applaudi immédiatement, comme si le morceau n'était pas terminé. Ce bref silence collectif a été suivi d'une ovation. Les spectateurs interrogés ont décrit un moment fragile qui les obligeait à écouter autrement, bien loin de l'ambiance bruyante habituelle des concerts.",
+    "q": "Comment le public a-t-il finalement réagi à cette expérience ?",
+    "c": [
+      "Il a répondu par une écoute attentive puis une ovation.",
+      "Il a quitté la salle avant la fin.",
+      "Il a chanté avec l'artiste.",
+      "Il a demandé le remboursement des billets."
+    ],
+    "a": 0,
+    "k": "Ce bref silence collectif a été suivi d'une ovation."
+  },
+  {
+    "t": "SAMEDI DES MÉTIERS D'ART\nLe 9 avril, les ateliers du quartier Saint-Paul accueilleront le public sans rendez-vous. Relieurs, verriers et restaurateurs de tableaux présenteront leurs gestes et répondront aux questions sur leur parcours. Des démonstrations auront lieu toute la journée ; les visiteurs pourront aussi essayer certaines techniques sur de petites pièces. Un espace d'information réunira les écoles et les organismes qui financent les formations. L'événement vise notamment les personnes qui envisagent une orientation ou une reconversion.",
+    "q": "Quel est l'objectif principal de cette journée ?",
+    "c": [
+      "Vendre des œuvres à des collectionneurs.",
+      "Faire découvrir des métiers et leurs formations.",
+      "Recruter des artisans pour restaurer le quartier.",
+      "Inaugurer de nouveaux ateliers municipaux."
+    ],
+    "a": 1,
+    "k": "L'événement vise notamment les personnes qui envisagent une orientation ou une reconversion."
+  },
+  {
+    "t": "De nombreux créateurs de contenu collectent des dons pour une association lors d'une diffusion en direct. Le Comité Transparence Solidaire ne choisit pas les causes à leur place. Il vérifie que l'association existe, que le montant annoncé lui est effectivement versé et que les frais éventuels sont clairement présentés. Les influenceurs qui respectent ces règles peuvent afficher un label pendant leur campagne. Le comité publie ensuite un bilan accessible au public. Son objectif est d'éviter que l'émotion et l'urgence servent de prétexte à des collectes opaques, sans décourager la générosité ni imposer un intermédiaire unique.",
+    "q": "Quelle mission remplit ce comité ?",
+    "c": [
+      "Organiser lui-même toutes les collectes de dons.",
+      "Décider quelles associations méritent un soutien.",
+      "Rémunérer les influenceurs bénévoles.",
+      "Contrôler la transparence des campagnes solidaires."
+    ],
+    "a": 3,
+    "k": "Il vérifie que l'association existe, que le montant annoncé lui est effectivement versé"
+  },
+  {
+    "t": "Les parents fixent souvent des règles précises sur le temps d'écran tout en consultant eux-mêmes leur téléphone pendant les repas. Or, les enfants apprennent moins par les consignes que par les habitudes qu'ils observent. Cela ne signifie pas que toute la famille doit utiliser les mêmes appareils ni respecter exactement les mêmes horaires. Les adultes peuvent expliquer les différences liées au travail, mais ils doivent aussi montrer qu'ils savent interrompre une conversation numérique, poser le téléphone et supporter un moment d'attente. Une éducation cohérente associe donc des limites adaptées à l'âge, des espaces communs sans écran et un exemple crédible donné par les parents.",
+    "q": "Que recommande l'auteur aux parents concernant les écrans ?",
+    "c": [
+      "D'interdire tout appareil à la maison.",
+      "D'appliquer les mêmes horaires à tous.",
+      "De laisser les enfants choisir seuls leurs règles.",
+      "D'accorder leur comportement aux limites qu'ils posent."
+    ],
+    "a": 3,
+    "k": "Or, les enfants apprennent moins par les consignes que par les habitudes qu'ils observent."
+  },
+  {
+    "t": "Lorsqu'une application de santé recommande de marcher davantage, l'utilisateur ignore souvent comment ce conseil a été établi. Les données viennent-elles d'une mesure fiable ? Le programme distingue-t-il une journée de travail d'une période de maladie ? En confiant une partie du suivi à un outil, le patient ne doit pas perdre la possibilité de comprendre ni de contester une recommandation. Les concepteurs et les professionnels qui proposent ces applications ont donc une responsabilité commune : expliquer leurs limites, protéger les informations recueillies et maintenir un dialogue humain autour des résultats.",
+    "q": "Que souligne l'article au sujet des applications de santé ?",
+    "c": [
+      "Leur efficacité dépend du prix des appareils.",
+      "Leur usage exige transparence et accompagnement.",
+      "Elles doivent remplacer les consultations ordinaires.",
+      "Les patients refusent généralement de partager leurs données."
+    ],
+    "a": 1,
+    "k": "expliquer leurs limites, protéger les informations recueillies et maintenir un dialogue humain autour des résultats"
+  },
+  {
+    "t": "Peut-on mesurer le sentiment d'appartenance à un quartier ? Les urbanistes ont longtemps compté les équipements ou observé la fréquentation des espaces publics. Ils complètent désormais ces données par des entretiens répétés, des cartes dessinées par les habitants et l'étude des réseaux d'entraide. Aucun indicateur ne résume à lui seul une réalité aussi intime. En croisant les méthodes, les chercheurs peuvent toutefois repérer si les habitants se sentent reconnus, s'ils disposent de lieux pour se rencontrer et s'ils pensent pouvoir agir sur leur environnement.",
+    "q": "Qu'apprend-on sur le sentiment d'appartenance ?",
+    "c": [
+      "Il dépend essentiellement du nombre de commerces.",
+      "Plusieurs méthodes permettent de mieux l'évaluer.",
+      "Les habitants refusent d'en parler aux chercheurs.",
+      "Il reste identique malgré les transformations urbaines."
+    ],
+    "a": 1,
+    "k": "En croisant les méthodes, les chercheurs peuvent toutefois repérer"
+  },
+  {
+    "t": "Avant de louer une voiture à l'étranger, vérifiez ce que couvre réellement le contrat. Dans certains pays, le prix affiché n'inclut ni le second conducteur ni l'assistance en cas de panne. Le montant bloqué sur votre carte bancaire peut également être très élevé. Photographiez le véhicule au départ, conservez le reçu du plein de carburant et demandez un document signé lors de la restitution. Ces précautions paraissent fastidieuses, mais elles facilitent toute contestation ultérieure.",
+    "q": "Quelle est l'intention de l'auteur ?",
+    "c": [
+      "Il critique le tourisme automobile.",
+      "Il donne des conseils aux locataires de voitures.",
+      "Il raconte un conflit avec une agence.",
+      "Il compare les prix de plusieurs pays."
+    ],
+    "a": 1,
+    "k": "Photographiez le véhicule au départ, conservez le reçu du plein de carburant et demandez un document signé lors de la restitution."
+  },
+  {
+    "t": "Pour progresser dans une langue, accumuler des listes de mots ne suffit pas. Un terme mémorisé sans contexte reste souvent inaccessible au moment de parler. Il vaut mieux le rencontrer dans plusieurs phrases, essayer de l'employer, puis revenir dessus après un intervalle croissant. L'erreur joue également un rôle utile : lorsqu'elle est comprise et corrigée, elle oblige à préciser la règle que l'on croyait maîtriser. Enfin, alterner lecture, écoute et conversation crée des chemins différents vers la même connaissance. La régularité compte davantage qu'une longue séance isolée pratiquée la veille d'un examen.",
+    "q": "D'après l'auteur, que faut-il éviter pendant l'apprentissage d'une langue ?",
+    "c": [
+      "Mémoriser des mots sans les replacer en contexte.",
+      "Revenir plusieurs fois sur la même notion.",
+      "Varier les activités de compréhension et d'expression.",
+      "Analyser les erreurs commises en parlant."
+    ],
+    "a": 0,
+    "k": "Un terme mémorisé sans contexte reste souvent inaccessible au moment de parler."
+  },
+  {
+    "t": "Les jeunes ingénieurs ne choisissent plus seulement un poste en fonction du salaire ou du prestige de l'entreprise. Beaucoup demandent à connaître l'utilité concrète du projet, ses conséquences environnementales et la marge de décision accordée à l'équipe. Cette exigence ne signifie pas qu'ils refusent toute contrainte : ils acceptent un cadre lorsqu'il est expliqué et cohérent. En revanche, une consigne justifiée uniquement par l'habitude suscite vite des questions. Les responsables doivent donc partager davantage les arbitrages et reconnaître que l'autorité ne dispense plus de rendre des comptes. Ce changement oblige les organisations à clarifier leurs choix plutôt qu'à simplement les imposer.",
+    "q": "Qu'apprend-on sur les jeunes ingénieurs dans l'entreprise ?",
+    "c": [
+      "Ils demandent que les décisions soient justifiées.",
+      "Ils privilégient systématiquement le salaire.",
+      "Ils refusent les projets comportant des contraintes.",
+      "Ils souhaitent travailler sans responsable."
+    ],
+    "a": 0,
+    "k": "ils acceptent un cadre lorsqu'il est expliqué et cohérent"
+  },
+  {
+    "t": "Les systèmes capables de rédiger une réponse fluide donnent l'impression que le savoir est immédiatement disponible. Pour la philosophe Clara Rossi, l'enseignant ne doit ni les ignorer ni se transformer en simple surveillant. Son rôle devient celui d'un organisateur de l'enquête : demander d'où vient une affirmation, confronter plusieurs formulations, repérer ce qui manque et relier une réponse à des connaissances plus larges. Les élèves doivent apprendre qu'une phrase convaincante n'est pas automatiquement vraie. L'enseignant apporte aussi le temps du désaccord et de la reprise, que l'outil tend à effacer en fournissant aussitôt un texte achevé.",
+    "q": "Selon Clara Rossi, quel rôle l'enseignant doit-il assumer ?",
+    "c": [
+      "Guider la vérification et la mise en perspective des réponses.",
+      "Interdire tous les outils de rédaction automatique.",
+      "Rédiger les réponses à la place des élèves.",
+      "Évaluer seulement la qualité du style."
+    ],
+    "a": 0,
+    "k": "Son rôle devient celui d'un organisateur de l'enquête"
+  },
+  {
+    "t": "Le syndrome de l'imposteur décrit le sentiment de ne pas mériter sa place malgré des réussites reconnues. Les personnes concernées attribuent leurs résultats à la chance, à une erreur d'évaluation ou à un effort exceptionnel qu'elles ne pourront pas répéter. Les enquêtes montrent que ce sentiment touche des profils très différents et n'indique pas une absence réelle de compétence. Il apparaît souvent dans les périodes de transition ou dans un environnement où l'on dispose de peu de modèles auxquels s'identifier. Le terme est utile pour nommer une expérience, mais certains psychologues craignent qu'il transforme en défaut individuel des conditions de travail réellement excluantes.",
+    "q": "Quel constat est établi au sujet de ce syndrome ?",
+    "c": [
+      "Il prouve un manque objectif de compétences.",
+      "Il touche uniquement les jeunes diplômés.",
+      "Il peut exister malgré des réussites réelles.",
+      "Il disparaît dès qu'une personne change d'emploi."
+    ],
+    "a": 2,
+    "k": "n'indique pas une absence réelle de compétence"
+  },
+  {
+    "t": "Chaque nuit, Adrien conduit le dernier autobus qui traverse la ville du nord au sud. Il connaît les horaires des infirmières, le silence des agents d'entretien et les habitudes de ceux qui rentrent après un spectacle. À chaque terminus, il note une phrase entendue ou un détail aperçu. De ces fragments naissent de courts poèmes qu'il publie anonymement dans le journal du dépôt. Ses collègues ont longtemps ignoré qu'il en était l'auteur. Adrien ne cherche pas à transformer les voyageurs en personnages reconnaissables ; il veut conserver la musique particulière d'une ville qui continue de vivre lorsque la majorité dort.",
+    "q": "Quelle particularité caractérise Adrien ?",
+    "c": [
+      "Il organise des spectacles dans son autobus.",
+      "Il travaille uniquement pour rencontrer des artistes.",
+      "Il publie les confidences privées des voyageurs.",
+      "Il transforme ses observations nocturnes en poésie."
+    ],
+    "a": 3,
+    "k": "De ces fragments naissent de courts poèmes"
+  },
+  {
+    "t": "Le développement des pompes à chaleur réduit l'usage du gaz, mais il déplace une partie de la demande vers le réseau électrique. Lors d'une vague de froid, des milliers d'appareils fonctionnent au même moment, précisément lorsque les logements consomment déjà davantage. Si les bâtiments restent mal isolés, la puissance appelée peut dépasser les prévisions et obliger le gestionnaire à activer des moyens de production coûteux. Le risque de coupure ne vient donc pas de chaque appareil pris séparément, mais de la simultanéité des usages. Les ingénieurs recommandent d'accélérer l'isolation, de piloter certains équipements et de renforcer localement le réseau avant les pics hivernaux.",
+    "q": "Pourquoi le réseau risque-t-il d'être surchargé ?",
+    "c": [
+      "Les appareils cessent de fonctionner quand il fait froid.",
+      "De nombreux chauffages électriques démarrent simultanément.",
+      "Le gaz devient trop abondant dans les logements.",
+      "Les bâtiments isolés consomment davantage."
+    ],
+    "a": 1,
+    "k": "des milliers d'appareils fonctionnent au même moment"
+  },
+  {
+    "t": "Les réunions hybrides prétendent placer sur un pied d'égalité ceux qui sont dans la salle et ceux qui participent à distance. En pratique, les premiers échangent des regards, commentent entre eux et prennent la parole plus spontanément ; les seconds attendent qu'on remarque une main levée sur l'écran. Ajouter une caméra performante ne corrige pas cette asymétrie. Tant que l'organisation considère la présence physique comme la situation normale et la connexion comme une exception, les participants éloignés restent périphériques. Il faut repenser les règles : documents partagés avant la séance, tours de parole explicites, décisions consignées et animation assurée depuis l'interface commune.",
+    "q": "Quelle critique l'auteur formule-t-il ?",
+    "c": [
+      "Le coût croissant des équipements audiovisuels.",
+      "La multiplication inutile des réunions d'équipe.",
+      "Le refus des salariés de revenir au bureau.",
+      "Une organisation qui désavantage les participants à distance."
+    ],
+    "a": 3,
+    "k": "les participants éloignés restent périphériques"
+  },
+  {
+    "t": "Les algorithmes de recommandation promettent de nous faire gagner du temps en sélectionnant musiques, films ou articles. Pourtant, leur efficacité produit un effet discret : ce qui ressemble à nos choix passés devient plus visible, tandis que l'inattendu disparaît de l'écran. Il serait excessif d'affirmer que la machine enferme mécaniquement chacun dans ses goûts, car l'utilisateur peut chercher ailleurs. Mais l'interface transforme l'effort nécessaire : accepter la proposition est immédiat, s'en écarter demande une démarche volontaire. À long terme, cette architecture peut rétrécir l'horizon culturel sans aucune interdiction explicite.",
+    "q": "Quelle conséquence des recommandations automatiques l'auteur met-il en évidence ?",
+    "c": [
+      "Elles rendent les contenus culturels plus coûteux.",
+      "Elles améliorent la mémoire des utilisateurs.",
+      "Elles suppriment toute liberté de recherche.",
+      "Elles peuvent limiter l'exposition à la nouveauté."
+    ],
+    "a": 3,
+    "k": "cette architecture peut rétrécir l'horizon culturel sans aucune interdiction explicite"
+  },
+  {
+    "t": "Plusieurs musées européens commencent à restituer des objets acquis pendant la période coloniale. L'équipe de rédaction estime que ces retours ne doivent pas être présentés comme une perte sèche pour la connaissance. Une restitution peut s'accompagner de recherches communes, de prêts réciproques, de numérisation et d'expositions conçues avec les institutions du pays d'origine. Refuser tout retour au nom de l'accès universel revient à oublier que cet accès s'est souvent construit sans consentement. Les procédures doivent examiner l'histoire de chaque objet, sans transformer la restitution en geste automatique. Mais la complexité ne peut pas servir d'excuse à l'immobilité : elle oblige à documenter, dialoguer et partager l'autorité sur les collections.",
+    "q": "Quelle position l'équipe de rédaction défend-elle ?",
+    "c": [
+      "Les restitutions peuvent enrichir la coopération entre musées.",
+      "Tous les objets doivent être rendus sans examen.",
+      "La numérisation remplace définitivement les œuvres.",
+      "Les collections coloniales doivent rester inchangées."
+    ],
+    "a": 0,
+    "k": "Une restitution peut s'accompagner de recherches communes, de prêts réciproques"
+  },
+  {
+    "t": "Le succès des repair cafés est souvent présenté comme une victoire contre le gaspillage. On y apporte un grille-pain ou une lampe, et des bénévoles aident à diagnostiquer la panne. Leur apport le plus durable n'est pourtant pas le nombre d'objets sauvés. En ouvrant les appareils et en expliquant leurs gestes, ils rendent aux usagers une compréhension que la conception industrielle avait progressivement confisquée. Tout ne peut pas être réparé, faute de pièces ou parce que certains produits sont scellés. Mais même un échec documenté transforme le consommateur : il sait désormais poser des questions sur la solidité, la disponibilité des composants et la possibilité d'entretien avant d'acheter.",
+    "q": "Quelle idée centrale cet article développe-t-il ?",
+    "c": [
+      "La rentabilité des ateliers de réparation associatifs.",
+      "Le pouvoir d'agir que procure la compréhension des objets.",
+      "La nécessité d'interdire les appareils impossibles à réparer.",
+      "La concurrence entre bénévoles et réparateurs professionnels."
+    ],
+    "a": 1,
+    "k": "ils rendent aux usagers une compréhension que la conception industrielle avait progressivement confisquée"
+  }
+]
+</script>
+
+<script>
+var QQ = JSON.parse(document.getElementById("qdata").textContent);
+var ans = {};
+var cur = 0;
+
+function getPoints(i) {
+  var n = i + 1;
+  if (n <= 4)  return 3;
+  if (n <= 10) return 9;
+  if (n <= 19) return 15;
+  if (n <= 29) return 21;
+  if (n <= 35) return 26;
+  return 33;
+}
+
+function getNclc(score) {
+  if (score >= 549) return { level: "NCLC 10+", msg: "Excellent ! Niveau NCLC 10 et plus." };
+  if (score >= 524) return { level: "NCLC 9",   msg: "Très bien ! Niveau NCLC 9." };
+  if (score >= 499) return { level: "NCLC 8",   msg: "Très bien ! Niveau NCLC 8." };
+  if (score >= 453) return { level: "NCLC 7",   msg: "Objectif immigration atteint ! Niveau NCLC 7." };
+  if (score >= 406) return { level: "NCLC 6",   msg: "Encore un peu d'effort pour atteindre le NCLC 7 !" };
+  if (score >= 375) return { level: "NCLC 5",   msg: "Continuez à pratiquer, niveau NCLC 5." };
+  if (score >= 342) return { level: "NCLC 4",   msg: "Continuez à pratiquer, niveau NCLC 4." };
+  return { level: "En dessous de NCLC 4", msg: "Continuez à pratiquer !" };
+}
+
+function esc(s) {
+  var t = String(s);
+  t = t.replace(/&/g, "&amp;");
+  t = t.replace(/</g, "&lt;");
+  t = t.replace(/>/g, "&gt;");
+  return t;
+}
+
+function hl(text, key) {
+  var h = esc(text).split("\n").join("<br>");
+  try {
+    var ek = esc(key);
+    var idx = h.toLowerCase().indexOf(ek.toLowerCase());
+    if (idx >= 0) {
+      h = h.substring(0, idx) + "<mark>" + h.substring(idx, idx + ek.length) + "</mark>" + h.substring(idx + ek.length);
+    }
+  } catch(e) {}
+  return h;
+}
+
+function updateHeader() {
+  var ok = 0, score = 0;
+  for (var k in ans) { if (ans[k].ok) { ok++; score += getPoints(parseInt(k)); } }
+  document.getElementById("hdr-sub").textContent = "39 questions · " + score + " pt";
+  var pct = Math.round((Object.keys(ans).length / QQ.length) * 100);
+  document.getElementById("prog").style.width = pct + "%";
+  document.getElementById("pleft").textContent = "Question " + (cur + 1) + " / 39";
+  document.getElementById("pright").textContent = pct + "% complété";
+}
+
+function render(i) {
+  cur = i;
+  var q = QQ[i];
+  var ua = ans[i];
+  var done = ua !== undefined;
+  var textHtml = done ? hl(q.t, q.k) : esc(q.t).split("\n").join("<br>");
+  var keyLabel = done ? "<div class=\"key-label\">🔑 Phrase-clé surlignée</div>" : "";
+
+  var labels = ["A", "B", "C", "D"];
+  var choicesHtml = "";
+  for (var ci = 0; ci < q.c.length; ci++) {
+    var cls = "choice";
+    if (done) {
+      if (ci === q.a) cls += " correct";
+      else if (ua.choice === ci) cls += " wrong";
+    }
+    choicesHtml += "<button class=\"" + cls + "\" onclick=\"pick(" + i + "," + ci + ")\">" +
+      "<span class=\"badge\">" + labels[ci] + "</span><span>" + esc(q.c[ci]) + "</span></button>";
+  }
+
+  var feedbackHtml = "";
+  if (done) {
+    if (ua.ok) {
+      feedbackHtml = "<div class=\"feedback ok\">✅ Bonne réponse !</div>";
+    } else {
+      feedbackHtml = "<div class=\"feedback ko\">❌ Réponse incorrecte. La bonne réponse est <strong>" + labels[q.a] + ". " + esc(q.c[q.a]) + "</strong></div>";
+    }
+  }
+
+  var prevDisabled = i === 0 ? " disabled" : "";
+  var nextDisabled = i === QQ.length - 1 ? " disabled" : "";
+
+  document.getElementById("view").innerHTML =
+    "<div class=\"nav\">" +
+      "<button class=\"btn\"" + prevDisabled + " onclick=\"render(" + (i-1) + ")\">← Précédente</button>" +
+      "<button class=\"btn\"" + nextDisabled + " onclick=\"render(" + (i+1) + ")\">Suivante →</button>" +
+      "<button class=\"btn btn-results\" onclick=\"summary()\">Résultats</button>" +
+    "</div>" +
+    "<div class=\"card\">" +
+      keyLabel +
+      "<div class=\"textbox\">" + textHtml + "</div>" +
+      "<div class=\"question\">Q" + (i+1) + ". " + esc(q.q) + "</div>" +
+      "<div class=\"choices\">" + choicesHtml + "</div>" +
+      feedbackHtml +
+    "</div>";
+
+  updateHeader();
+}
+
+function pick(qi, ci) {
+  if (ans[qi] !== undefined) return;
+  ans[qi] = { choice: ci, ok: ci === QQ[qi].a };
+  render(qi);
+}
+
+function calcScore() {
+  var ok = 0, score = 0;
+  for (var k in ans) { if (ans[k].ok) { ok++; score += getPoints(parseInt(k)); } }
+  return { ok: ok, score: score };
+}
+
+function summary() {
+  var r = calcScore();
+  var nclc = getNclc(r.score);
+  var gridHtml = "";
+  for (var i = 0; i < QQ.length; i++) {
+    var cls = "grid-btn na";
+    var ua = ans[i];
+    if (ua !== undefined) cls = ua.ok ? "grid-btn ok" : "grid-btn ko";
+    gridHtml += "<button class=\"" + cls + "\" onclick=\"render(" + i + ")\" title=\"Q" + (i+1) + "\">" + (i+1) + "</button>";
+  }
+
+  document.getElementById("view").innerHTML =
+    "<div class=\"summary\">" +
+      "<h2>📊 Résultats</h2>" +
+      "<div class=\"score-block\">" +
+        "<div class=\"score-correct\">" + r.ok + " / 39 ✓</div>" +
+        "<div class=\"score-tcf\">Score TCF estimé : <strong>" + r.score + "</strong> / 699</div>" +
+        "<div class=\"score-nclc\">" + nclc.level + "</div>" +
+        "<div class=\"score-msg\">" + nclc.msg + "</div>" +
+      "</div>" +
+      "<div class=\"grid\">" + gridHtml + "</div>" +
+      "<div class=\"sum-actions\">" +
+        "<button class=\"sum-btn\" onclick=\"showReport()\">📋 Voir le rapport des erreurs</button>" +
+        "<button class=\"sum-btn red\" onclick=\"reset()\">↺ Recommencer</button>" +
+      "</div>" +
+      "<div class=\"sum-note\">* Score estimatif à titre indicatif</div>" +
+    "</div>";
+
+  updateHeader();
+}
+
+function showReport() {
+  var itemsHtml = "";
+  var labels = ["A", "B", "C", "D"];
+  for (var i = 0; i < QQ.length; i++) {
+    var ua = ans[i];
+    if (!ua || ua.ok) continue;
+    var q = QQ[i];
+    var textHtml = hl(q.t, q.k);
+    var choicesHtml = "";
+    for (var ci = 0; ci < q.c.length; ci++) {
+      var cls = "report-choice neutral";
+      var icon = "";
+      if (ci === q.a) { cls = "report-choice correct"; icon = "✓ "; }
+      else if (ua.choice === ci) { cls = "report-choice wrong"; icon = "✗ "; }
+      choicesHtml += "<div class=\"" + cls + "\"><strong>" + labels[ci] + ".</strong> " + icon + esc(q.c[ci]) + "</div>";
+    }
+    itemsHtml +=
+      "<div class=\"report-item\">" +
+        "<div class=\"qnum\">Question " + (i+1) + "</div>" +
+        "<div class=\"key-label\" style=\"margin-bottom:.6rem\">🔑 Phrase-clé surlignée</div>" +
+        "<div class=\"textbox\">" + textHtml + "</div>" +
+        "<div class=\"question\" style=\"font-size:14px;margin-bottom:.6rem\">" + esc(q.q) + "</div>" +
+        choicesHtml +
+      "</div>";
+  }
+
+  if (!itemsHtml) {
+    itemsHtml = "<div style=\"text-align:center;padding:2rem;color:#1D9E75;font-weight:600\">🎉 Aucune erreur ! Bravo !</div>";
+  }
+
+  document.getElementById("view").innerHTML =
+    "<div class=\"report-header\">" +
+      "<strong style=\"font-size:16px\">📋 Rapport des erreurs</strong>" +
+      "<button class=\"btn btn-results\" onclick=\"summary()\">← Retour aux résultats</button>" +
+    "</div>" +
+    itemsHtml;
+}
+
+function reset() {
+  ans = {};
+  render(0);
+}
+
+window.onload = function() { render(0); };
+</script>
+</body>
+</html>
