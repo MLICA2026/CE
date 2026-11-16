@@ -701,10 +701,18 @@ function mliAfterWrite(pw) {
   }
   window.mliExportPDF = function () {
     var L = ["A","B","C","D"], ok = 0, rows = "";
-    var txt = document.body.innerText || "";
-    var m = txt.match(/Score TCF estim[ée]\s*:\s*(\d+)/);
-    var score = m ? m[1] : "—";
-    var lv = txt.match(/(En dessous de NCLC\s*\d+|NCLC\s*\d+(\s*\+)?)/);
+    var score = null, lvTxt = "";
+    try { if (typeof calcScore === "function") { var cs = calcScore(); if (cs && cs.score !== undefined) score = cs.score; } } catch (e) {}
+    if (score === null) {
+      var pf = typeof getPoints === "function" ? getPoints : (typeof pts === "function" ? pts : null);
+      if (pf) { score = 0; for (var k in ans) if (ans[k].ok) score += pf(parseInt(k)); }
+    }
+    try {
+      var nf = typeof getNclc === "function" ? getNclc : (typeof nclc === "function" ? nclc : null);
+      if (nf && score !== null) { var nn = nf(score); lvTxt = nn.level || nn.l || ""; }
+    } catch (e) {}
+    if (score === null) score = "—";
+    var lv = lvTxt ? [lvTxt, lvTxt] : null;
     for (var i = 0; i < QQ.length; i++) {
       var q = QQ[i], ua = ans[i], done = ua !== undefined;
       if (done && ua.ok) ok++;
@@ -767,6 +775,80 @@ function mliAfterWrite(pw) {
   if (typeof orig === "function") {
     window.summary = function () { var r = orig.apply(this, arguments); try { addBtn(); } catch (e) {} return r; };
   }
+})();
+</script>
+
+<script>
+/* MLI – Export PDF sur la page d'erreurs et le vocabulaire (ajouté 2026-11) */
+(function () {
+  function openWin() {
+    var w = null;
+    try { w = window.open("", "_blank"); } catch (e) { w = null; }
+    if (w && w.document) return { w: w, frame: false };
+    var old = document.getElementById("mli-print-frame2"); if (old) old.parentNode.removeChild(old);
+    var f = document.createElement("iframe"); f.id = "mli-print-frame2";
+    f.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";
+    document.body.appendChild(f);
+    return { w: f.contentWindow, frame: true };
+  }
+  function writeAndPrint(html) {
+    var o = openWin();
+    o.w.document.open(); o.w.document.write(html); o.w.document.close();
+    setTimeout(function () { try { o.w.focus(); o.w.print(); } catch (e) {} }, 500);
+  }
+  function pageTitle() {
+    var t = document.getElementById("hdr-title") || document.querySelector(".header-title");
+    return t ? t.textContent.trim() : document.title;
+  }
+  function logoSrc() {
+    if (typeof LOGO_SRC !== "undefined") return LOGO_SRC;
+    var im = document.querySelector("img[src^='data:image']"); return im ? im.src : "";
+  }
+  // Imprime la vue courante (vocabulaire) avec les styles de la page
+  window.mliPrintView = function () {
+    var css = ""; var st = document.querySelectorAll("style");
+    for (var i = 0; i < st.length; i++) css += st[i].textContent + "\n";
+    var v = document.getElementById("view"); if (!v) return;
+    var lg = logoSrc();
+    writeAndPrint('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + pageTitle() + '</title><style>' + css +
+      "body{background:#fff!important;padding:1.2rem}.nav,.mli-pdf2,#zoombar{display:none!important}" +
+      "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.voc-item,.report-item,.report-q{page-break-inside:avoid}" +
+      "</style></head><body><div style='display:flex;align-items:center;gap:1rem;border-bottom:2px solid #185FA5;padding-bottom:.8rem;margin-bottom:1rem'>" +
+      (lg ? "<img src='" + lg + "' style='height:44px'>" : "") +
+      "<div><div style='font-size:17px;font-weight:700;color:#185FA5'>" + pageTitle() + "</div><div style='font-size:11px;color:#666'>" +
+      new Date().toLocaleDateString("fr-CA") + "</div></div></div>" + v.innerHTML + "</body></html>");
+  };
+  function makeBtn(onclick) {
+    var b = document.createElement("button");
+    b.className = "mli-pdf2"; b.type = "button"; b.textContent = "🖨️ Exporter PDF";
+    b.style.cssText = "margin:0 0 .8rem .5rem;padding:7px 16px;border:1px solid #639922;color:#3B6D11;background:#EAF3DE;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit";
+    b.onclick = onclick; return b;
+  }
+  function visible(sel) {
+    var a = document.querySelectorAll(sel);
+    for (var i = 0; i < a.length; i++) if (a[i].offsetParent !== null) return a[i];
+    return null;
+  }
+  function addAfterAnchor(anchorSel, onclick) {
+    var old = document.querySelectorAll(".mli-pdf2");
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    var a = visible(anchorSel), b = makeBtn(onclick);
+    if (a) { b.style.margin = '0 0 0 .5rem'; b.style.verticalAlign = 'middle'; a.parentNode.insertBefore(b, a.nextSibling); return; }
+    var box = visible("#report") || document.getElementById("view");
+    if (box) box.insertBefore(b, box.firstChild);
+  }
+  function reportPDF() {
+    if (typeof window.mliExportPDF === "function") return window.mliExportPDF();
+    if (typeof window.printPDF === "function") return window.printPDF();
+    window.mliPrintView();
+  }
+  function wrap(name, after) {
+    var o = window[name];
+    if (typeof o !== "function") return;
+    window[name] = function () { var r = o.apply(this, arguments); try { after(); } catch (e) {} return r; };
+  }
+  wrap("showReport", function () { addAfterAnchor("[onclick^='summary']", reportPDF); });
+  wrap("showVocab", function () { addAfterAnchor("[onclick^='showLevelSelect']", window.mliPrintView); });
 })();
 </script>
 </body>
