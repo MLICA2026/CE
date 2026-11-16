@@ -71,5 +71,114 @@ function showReport(){var labels=["A","B","C","D"];var html='<button class="btn-
 function restart(){ans={};cur=0;try{sessionStorage.removeItem("tcf11_ans");sessionStorage.removeItem("tcf11_cur");}catch(e){}render(0);}
 window.onload=function(){try{var savedAns=sessionStorage.getItem("tcf11_ans");var savedCur=sessionStorage.getItem("tcf11_cur");if(savedAns)ans=JSON.parse(savedAns);if(savedCur)cur=parseInt(savedCur);}catch(e){}render(cur);};
 </script>
+
+<script>
+/* MLI – Export PDF (ajouté 2026-11) */
+(function () {
+
+var __mliFrame = false;
+function mliPrintWin() {
+  var w = null;
+  try { w = window.open("", "_blank"); } catch (e) { w = null; }
+  if (w && w.document) { __mliFrame = false; return w; }
+  var old = document.getElementById("mli-print-frame");
+  if (old) old.parentNode.removeChild(old);
+  var f = document.createElement("iframe");
+  f.id = "mli-print-frame";
+  f.style.cssText = "position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0";
+  document.body.appendChild(f);
+  __mliFrame = true;
+  return f.contentWindow;
+}
+function mliAfterWrite(pw) {
+  if (__mliFrame) setTimeout(function () { try { pw.focus(); pw.print(); } catch (e) { window.print(); } }, 500);
+}
+
+  function x(s) { return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function hi(t, k) {
+    var h = x(t);
+    if (k) { var ek = x(k), i = h.toLowerCase().indexOf(ek.toLowerCase());
+      if (i >= 0) h = h.slice(0, i) + "<mark>" + h.slice(i, i + ek.length) + "</mark>" + h.slice(i + ek.length); }
+    return h.split("\n").join("<br>");
+  }
+  function logoSrc() {
+    if (typeof LOGO_SRC !== "undefined") return LOGO_SRC;
+    var im = document.querySelector("img[src^='data:image']");
+    return im ? im.src : "";
+  }
+  function title() {
+    var t = document.querySelector(".header-title");
+    return t ? t.textContent.trim() : (document.title || "Compréhension écrite");
+  }
+  window.mliExportPDF = function () {
+    var L = ["A","B","C","D"], ok = 0, rows = "";
+    var txt = document.body.innerText || "";
+    var m = txt.match(/Score TCF estim[ée]\s*:\s*(\d+)/);
+    var score = m ? m[1] : "—";
+    var lv = txt.match(/(En dessous de NCLC\s*\d+|NCLC\s*\d+(\s*\+)?)/);
+    for (var i = 0; i < QQ.length; i++) {
+      var q = QQ[i], ua = ans[i], done = ua !== undefined;
+      if (done && ua.ok) ok++;
+      var ch = "";
+      for (var c = 0; c < q.c.length; c++) {
+        var cls = "neutral", ic = "";
+        if (done) { if (c === q.a) { cls = "correct"; ic = "✓ "; } else if (ua.choice === c) { cls = "wrong"; ic = "✗ "; } }
+        ch += "<div class='ch " + cls + "'><strong>" + L[c] + ".</strong> " + ic + x(q.c[c]) + "</div>";
+      }
+      var badge = done ? (ua.ok ? " ✅" : " ❌ (→" + L[q.a] + ")") : " —";
+      rows += "<div class='item'><div class='qn'>Q" + (i + 1) + badge + "</div>" +
+        "<div class='psg'>" + hi(q.t, q.k) + "</div>" +
+        "<div class='qq'>" + x(q.q) + "</div>" + ch + "</div>";
+    }
+    var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + x(title()) + ' – Rapport complet</title><style>' +
+      "body{font-family:'Segoe UI',system-ui,sans-serif;color:#1a1a1a;padding:1.5rem;max-width:860px;margin:0 auto;font-size:13px}" +
+      ".ph{display:flex;align-items:center;gap:1.5rem;border-bottom:2px solid #185FA5;padding-bottom:1rem;margin-bottom:1.5rem}.ph img{height:48px}" +
+      ".ph h1{font-size:18px;color:#185FA5;margin:0}.ph p{font-size:12px;color:#666;margin:3px 0 0}" +
+      ".ss{background:#E6F1FB;border-radius:8px;padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;gap:2rem;align-items:center}" +
+      ".big{font-size:28px;font-weight:700;color:#185FA5}.lv{font-size:22px;font-weight:700;color:#BA7517}" +
+      ".item{border:1px solid #e0ddd5;border-radius:8px;padding:.75rem;margin-bottom:.75rem;page-break-inside:avoid}" +
+      ".qn{font-size:12px;font-weight:700;color:#185FA5;margin-bottom:.4rem}" +
+      ".psg{background:#f7f6f2;border-left:3px solid #B5D4F4;padding:.5rem .8rem;font-size:12px;line-height:1.6;margin-bottom:.5rem}" +
+      ".psg mark{background:#FAC775;color:#412402;padding:1px 2px;border-radius:2px}" +
+      ".qq{font-weight:600;font-size:13px;margin-bottom:.5rem}" +
+      ".ch{padding:5px 10px;border-radius:5px;font-size:12px;margin-bottom:4px}.neutral{background:#f5f4f0}" +
+      ".correct{background:#E1F5EE;color:#085041;font-weight:600}.wrong{background:#FAECE7;color:#4A1B0C}" +
+      "*{-webkit-print-color-adjust:exact;print-color-adjust:exact}@media print{body{padding:0}.np{display:none}}" +
+      "</style></head><body>" +
+      "<div class='ph'>" + (logoSrc() ? "<img src='" + logoSrc() + "' alt='MLI'>" : "") +
+      "<div><h1>" + x(title()) + "</h1><p>Rapport complet · " + new Date().toLocaleDateString("fr-CA") + "</p></div></div>" +
+      "<div class='ss'><div><div class='big'>" + ok + " / " + QQ.length + " ✓</div>" +
+      "<div>Score TCF estimé : <strong>" + score + "</strong> / 699</div></div>" +
+      (lv ? "<div class='lv'>" + x(lv[1]) + "</div>" : "") + "</div>" + rows +
+      "<p style='font-size:10px;color:#aaa;text-align:center;margin-top:2rem'>* Score estimatif – l'Institut de langues de Montréal</p>" +
+      "<div class='np' style='text-align:center;margin-top:1rem'><button onclick='window.print()' style='padding:8px 20px;background:#185FA5;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px'>🖨️ Imprimer / Enregistrer en PDF</button></div>" +
+      "</body></html>";
+    var pw = mliPrintWin();
+    pw.document.open(); pw.document.write(html); pw.document.close();
+    if (__mliFrame) mliAfterWrite(pw);
+    else setTimeout(function () { try { pw.focus(); pw.print(); } catch (e) {} }, 500);
+  };
+  function addBtn() {
+    var old = document.getElementById("mli-pdf-btn");
+    if (old && old.offsetParent !== null) return;
+    if (old) old.parentNode.removeChild(old);
+    var all = document.querySelectorAll("[onclick^='showReport']"), rep = null;
+    for (var j = 0; j < all.length; j++) { if (all[j].offsetParent !== null) { rep = all[j]; break; } }
+    if (!rep) rep = all[0];
+    if (!rep) return;
+    var b = rep.cloneNode(false);
+    b.id = "mli-pdf-btn";
+    b.removeAttribute("onclick");
+    b.onclick = window.mliExportPDF;
+    b.textContent = "🖨️ Exporter PDF";
+    b.style.cssText += ";border-color:#639922;color:#3B6D11;background:#EAF3DE";
+    rep.parentNode.insertBefore(b, rep.nextSibling);
+  }
+  var orig = window.summary;
+  if (typeof orig === "function") {
+    window.summary = function () { var r = orig.apply(this, arguments); try { addBtn(); } catch (e) {} return r; };
+  }
+})();
+</script>
 </body>
 </html>
